@@ -69,8 +69,8 @@ public class BookServiceImpl implements BookService{
 	@Transactional (readOnly =true)
 	@Override
 	public Iterable<BookDto> findBooksByAuthor(String author) {
-		
-		return bookRepository.findAllByAuthor(author)
+		Author author1 =authorRepository.findById(author).orElseThrow(EntityNotFound::new);
+		return author1.getBooks().stream()
 				.map(p->modelMapper.map(p, BookDto.class)).toList();
 	
 	}
@@ -78,7 +78,8 @@ public class BookServiceImpl implements BookService{
 	@Transactional (readOnly =true)
 	@Override
 	public Iterable<BookDto> findBooksByPublisher(String publisher) {
-		return bookRepository.findAllByPublisher(publisher)
+		Publisher publisher1 =publisherRepository.findById(publisher).orElseThrow(EntityNotFound::new);
+		return publisher1.getBooks().stream()
 				.map(p->modelMapper.map(p, BookDto.class)).toList();
 	}
 	@Transactional (readOnly =true)
@@ -90,26 +91,17 @@ public class BookServiceImpl implements BookService{
 	@Transactional (readOnly =true)
 	@Override
 	public Iterable<String> findPublishersByAuthor(String author) {
-				return bookRepository.findAllByAuthor(author)
-				.map(p->p.getPublisher().toString()).collect(Collectors.toSet());
+				return publisherRepository.findDistinctByBooksAuthorsName(author)
+				.map(Publisher::getBrand).toList();
 	}
 	@Transactional
 	@Override
 	public AuthorDto removeAuthor(String authorName) {
-//		List <BookDto> authorsBooks = (List<BookDto>) findBooksByAuthor (authorName);
-//		if(authorsBooks.size()!=0) {
-//		System.out.println("You have to delete all books of this author before removing!!!");
-//				return null;
-//		} else {
-			Author author= authorRepository.findById(authorName).orElseThrow(EntityNotFound::new);
-			try {
-				authorRepository.delete(author);
-			} catch (Exception e) {
-				throw new RuntimeException("You have to delete all books of this author before removing!!!");
-				
-			}
+		  
+		    Author author =authorRepository.findById(authorName).orElseThrow(EntityNotFound::new);
+		    authorRepository.delete(author);
+			
 			return modelMapper.map(author, AuthorDto.class);
-//		}
 		
 	}
 
