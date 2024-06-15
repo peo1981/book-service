@@ -36,10 +36,10 @@ public class BookServiceImpl implements BookService{
 	}
 	//Publisher
 	Publisher publisher =publisherRepository.findById(bookDto.getPublisher())
-			.orElse(publisherRepository.save(new Publisher(bookDto.getPublisher())));
+			.orElseGet(()->publisherRepository.save(new Publisher(bookDto.getPublisher())));
 	//Author 
 	Set<Author> authors =bookDto.getAuthors().stream().map(a->authorRepository.findById(a.getName())
-			.orElse(authorRepository.save(new Author(a.getName(),a.getBirthDate())))).collect(Collectors.toSet());
+			.orElseGet(()->authorRepository.save(new Author(a.getName(),a.getBirthDate())))).collect(Collectors.toSet());
 	Book book=new Book(bookDto.getIsbn(), bookDto.getTitle(), authors, publisher);
 		bookRepository.save(book);
 		return true;
@@ -54,7 +54,7 @@ public class BookServiceImpl implements BookService{
 	@Override
 	public BookDto removeBook(String isbn) {
 		
-		Book book =bookRepository.findByIdWithProps(isbn).orElseThrow(EntityNotFound::new);
+		Book book =bookRepository.findById(isbn).orElseThrow(EntityNotFound::new);
 		bookRepository.delete(book); 
 		return modelMapper.map(book, BookDto.class);
 	}
@@ -85,7 +85,7 @@ public class BookServiceImpl implements BookService{
 	@Transactional (readOnly =true)
 	@Override
 	public Iterable<AuthorDto> findBooksAuthors(String isbn) {
-		Book book =bookRepository.findByIdWithProps(isbn).orElseThrow(EntityNotFound::new);
+		Book book =bookRepository.findById(isbn).orElseThrow(EntityNotFound::new);
 		return book.getAuthors().stream().map(p->modelMapper.map(p, AuthorDto.class)).toList();
 	}
 	@Transactional (readOnly =true)
